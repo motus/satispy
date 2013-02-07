@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-from distutils.core import setup
+from distutils.core import setup, Extension
+
+cnfmodule = Extension(
+    'satispy.cnf',
+    sources = ['src/ext/cnfmodule.c']
+)
 
 setup(
     name='satispy',
@@ -13,6 +18,7 @@ setup(
     download_url='https://github.com/netom/satispy/tarball/1.0a4#egg=satispy-1.0a4',
     license='BSD License',
     platforms='OS Independent',
+    package_dir = {'': 'src/python'},
     packages=['satispy', 'satispy.io', 'satispy.solver'],
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -25,4 +31,5 @@ setup(
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Software Development :: Libraries'
     ],
+    ext_modules = [cnfmodule]
 )
