@@ -5,7 +5,12 @@ from distutils.core import setup, Extension
 
 cnfmodule = Extension(
     'satispy.cnf',
-    sources = ['src/ext/cnfmodule.c']
+    sources = [
+        'src/ext/cnf_module.c',
+        'src/ext/cnf_cnf.c',
+        'src/ext/cnf_variable.c',
+        'src/ext/cnf_variableset.c'
+    ]
 )
 
 setup(
