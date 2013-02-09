@@ -8,8 +8,7 @@ cnfmodule = Extension(
     sources = [
         'src/ext/cnf_module.c',
         'src/ext/cnf_cnf.c',
-        'src/ext/cnf_variable.c',
-        'src/ext/cnf_variableset.c'
+        'src/ext/cnf_variable.c'
     ]
 )
 
