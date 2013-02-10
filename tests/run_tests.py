@@ -44,16 +44,16 @@ class CnfTest(unittest.TestCase):
         #~ v2 = Variable("v2")
         #~ cnf = v1 & v2
         #~ self.assertEqual(set([frozenset([v1]),frozenset([v2])]), set(cnf.dis))
-#~ 
-    #~ def testOr(self):
-        #~ v1 = Variable("v1")
-        #~ v2 = Variable("v2")
-        #~ v3 = Variable("v3")
-        #~ v4 = Variable("v4")
-#~ 
-        #~ cnf1 = v1 | v2
-#~ 
-        #~ self.assertEqual(set([frozenset([v1,v2])]), set(cnf1.dis))
+
+    def testOr(self):
+        v1 = Variable("v1")
+        v2 = Variable("v2")
+
+        cnf = v1 | v2
+
+        val = 1 << v1.number | 1 << v2.number
+
+        self.assertEqual(val, reduce(lambda x, y: 256*x+ord(y), cnf.getBuffer(), 0))
 #~ 
         #~ cnf2 = cnf1 | v3
 #~ 
