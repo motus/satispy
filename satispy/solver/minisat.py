@@ -2,28 +2,18 @@
 from satispy.io import DimacsCnf
 from satispy import Variable, Solution
 
-import re
+from satispy.solver.minisat_stats import parse_stats
+
+import os
 import sys
 import subprocess
 
 from tempfile import NamedTemporaryFile
 
-_RE_MINISAT_STATS = [
-    ("variables", int, re.compile(r"^\|\s*Number of variables:\s+(\d+)")),
-    ("clauses", int, re.compile(r"^\|\s*Number of clauses:\s+(\d+)")),
-    ("parse_time", float, re.compile(r"^\|\s*Parse time:\s+(\d+(?:\.\d+)?) s")),
-    ("restarts", int, re.compile(r"^restarts\s*:\s*(\d+)")),
-    ("conflicts", int, re.compile(r"^conflicts\s*:\s*(\d+)")),
-    ("decisions", int, re.compile(r"^decisions\s*:\s*(\d+)")),
-    ("propagations", int, re.compile(r"^propagations\s*:\s*(\d+)")),
-    ("conflict_literals", int, re.compile(r"^conflict literals\s*:\s*(\d+)")),
-    ("cpu_time", float, re.compile(r"^CPU time\s*:\s*(\d+(?:\.\d+)?) s"))
-]
-
 
 class Minisat(object):
 
-    COMMAND = 'minisat %s %s > %s'
+    COMMAND = 'minisat'
 
     def __init__(self, command=COMMAND, timeout=None):
         self.command = command
@@ -35,22 +25,20 @@ class Minisat(object):
 
         with NamedTemporaryFile(mode='w') as infile, \
              NamedTemporaryFile(mode='r') as outfile, \
-             NamedTemporaryFile(mode='r') as statsfile:
+             NamedTemporaryFile(mode='r', delete=False) as statsfile:
 
             io = DimacsCnf()
             infile.write(io.tostring(cnf))
             infile.flush()
 
             ret = subprocess.call(
-                self.command % (infile.name, outfile.name, statsfile.name),
-                shell=True, timeout=self.timeout)
+                [self.command, infile.name, outfile.name],
+                stdout=statsfile, shell=True, universal_newlines=True)
 
-            for line in statsfile:
-                for (name, func, regex) in _RE_MINISAT_STATS:
-                    match = regex.search(line)
-                    if match:
-                        s.stats[name] = func(match.group(1))
-                        break
+            statsfile.close()
+            with open(statsfile.name) as minisat_stdout:
+                s.stats = parse_stats(minisat_stdout)
+            os.remove(statsfile.name)
 
             if ret != 10:
                 return s
