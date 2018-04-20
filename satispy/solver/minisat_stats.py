@@ -16,10 +16,14 @@ _RE_MINISAT_STATS = [
 
 def parse_stats(minisat_stdout):
     stats = {}
-    for line in minisat_stdout:
-        for (name, func, regex) in _RE_MINISAT_STATS:
+    try:
+        it = iter(_RE_MINISAT_STATS)
+        (name, func, regex) = next(it)
+        for line in minisat_stdout:
             match = regex.search(line)
             if match:
                 stats[name] = func(match.group(1))
-                break
+                (name, func, regex) = next(it)
+    except StopIteration:
+        pass
     return stats

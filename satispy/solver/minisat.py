@@ -33,7 +33,8 @@ class Minisat(object):
 
             ret = subprocess.call(
                 [self.command, infile.name, outfile.name],
-                stdout=statsfile, shell=True, universal_newlines=True)
+                stdout=statsfile, universal_newlines=True,
+                shell=True, timeout=self.timeout)
 
             statsfile.close()
             with open(statsfile.name) as minisat_stdout:
