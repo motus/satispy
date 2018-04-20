@@ -28,18 +28,24 @@ class Minisat(object):
              NamedTemporaryFile(mode='r', delete=False) as statsfile:
 
             io = DimacsCnf()
-            infile.write(io.tostring(cnf))
-            infile.flush()
 
-            ret = subprocess.call(
-                [self.command, infile.name, outfile.name],
-                stdout=statsfile, universal_newlines=True,
-                shell=True, timeout=self.timeout)
+            try:
+                infile.write(io.tostring(cnf))
+                infile.flush()
 
-            statsfile.close()
-            with open(statsfile.name) as minisat_stdout:
-                s.stats = parse_stats(minisat_stdout)
-            os.remove(statsfile.name)
+                ret = subprocess.call(
+                    [self.command, infile.name, outfile.name],
+                    stdout=statsfile, universal_newlines=True,
+                    shell=True, timeout=self.timeout)
+
+                # On Windows, need to close and re-open the file to read it.
+                statsfile.close()
+                with open(statsfile.name) as minisat_stdout:
+                    s.stats = parse_stats(minisat_stdout)
+
+            finally:
+                statsfile.close()
+                os.remove(statsfile.name)
 
             if ret != 10:
                 return s
