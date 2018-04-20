@@ -6,7 +6,7 @@ from satispy.solver.minisat_stats import parse_stats
 
 import os
 import sys
-import subprocess
+from subprocess import check_output, CalledProcessError
 
 from tempfile import NamedTemporaryFile
 
@@ -24,33 +24,25 @@ class Minisat(object):
         s = Solution()
 
         with NamedTemporaryFile(mode='w') as infile, \
-             NamedTemporaryFile(mode='r') as outfile, \
-             NamedTemporaryFile(mode='r', delete=False) as statsfile:
+             NamedTemporaryFile(mode='r') as outfile:
 
             io = DimacsCnf()
 
+            infile.write(io.tostring(cnf))
+            infile.flush()
+
             try:
-                infile.write(io.tostring(cnf))
-                infile.flush()
-
-                ret = subprocess.call(
+                output = check_output(
                     [self.command, infile.name, outfile.name],
-                    stdout=statsfile, universal_newlines=True,
-                    shell=True, timeout=self.timeout)
+                    universal_newlines=True, timeout=self.timeout)
+            except CalledProcessError as ex:
+                s.success = (ex.returncode == 10)
+                output = ex.output
 
-                # On Windows, need to close and re-open the file to read it.
-                statsfile.close()
-                with open(statsfile.name) as minisat_stdout:
-                    s.stats = parse_stats(minisat_stdout)
+            s.stats = parse_stats(output)
 
-            finally:
-                statsfile.close()
-                os.remove(statsfile.name)
-
-            if ret != 10:
+            if not s.success:
                 return s
-
-            s.success = True
 
             lines = outfile.readlines()[1:]
 
